@@ -6,12 +6,12 @@ mkdir edit
 mkdir app
 
 cd ../../mladez_bystrice_flutter
-flutter build
-cp -R ./build ../../web-repo/public/app
+flutter build web
+cp -R ./build/web/ ../web-repo/public/app/
 
-cd ../../mladez-bystrice-edit
-yarn build
-cp -R ./build ../../web-repo/public/edit
+cd ../mladez-bystrice-edit
+PUBLIC_URL='edit' && yarn build
+cp -R ./build/* ../web-repo/public/edit/
 
 cd ../web-repo
 

@@ -11,9 +11,11 @@ service cloud.firestore {
   	match /songs/{song} {
       allow read: if request.auth != null;
       allow update: if request.auth != null &&
-        isValidSong(false) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
-        request.resource.data.number == resource.data.number;
+				isValidSong(request.resource.data.checkRequired) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' && (
+        request.resource.data.checkRequired ||
+        request.resource.data.number == resource.data.number
+        );
       allow create: if request.auth != null &&
         isValidSong(true) &&
         ('number' in request.resource.data.keys()) == false &&

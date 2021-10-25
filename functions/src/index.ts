@@ -11,36 +11,40 @@ const isAdmin = async (id: string) => {
 };
 
 export const onUserCreated = functions
-  .region(region)
-  .auth.user()
-  .onCreate(async (user) => {
-    await admin
-      .firestore()
-      .collection("users")
-      .doc(user.uid)
-      .set({ role: "user", name: user.displayName, email: user.email });
-  });
+    .region(region)
+    .auth.user()
+    .onCreate(async (user) => {
+      await admin
+          .firestore()
+          .collection("users")
+          .doc(user.uid)
+          .set({role: "user", name: user.displayName, email: user.email});
+    });
 
 export const addToSongs = functions
-  .region(region)
-  .https.onCall(async ({ songId }: { songId: string }, context) => {
-    if (!songId) {
-        return { status: "error", code: 401, message: "No song ID provided" };
+    .region(region)
+    .https.onCall(async ({songId}: { songId: string }, context) => {
+      if (!songId) {
+        return {status: "error", code: 401, message: "No song ID provided"};
       }
-    if (!context.auth) {
-        return { status: "error", code: 401, message: "Not signed in" };
+      if (!context.auth) {
+        return {status: "error", code: 401, message: "Not signed in"};
       }
-    if (!(await isAdmin(context.auth.uid))) {
-        return { status: "error", code: 401, message: "No privileges" };
+      if (!(await isAdmin(context.auth.uid))) {
+        return {status: "error", code: 401, message: "No privileges"};
       }
-    await admin.firestore().runTransaction(async (transaction) => {
-      const lastSong = await transaction.get(
-        admin.firestore().collection("songs").orderBy("number", "desc").limit(1)
-      );
-      transaction.update(admin.firestore().doc(`songs/${songId}`), {
-        checkRequired: false,
-        number: lastSong.docs[0].data().number + 1,
+      await admin.firestore().runTransaction(async (transaction) => {
+        const lastSong = await transaction.get(
+            admin
+                .firestore()
+                .collection("songs")
+                .orderBy("number", "desc")
+                .limit(1)
+        );
+        transaction.update(admin.firestore().doc(`songs/${songId}`), {
+          checkRequired: false,
+          number: lastSong.docs[0].data().number + 1,
+        });
       });
+      return {status: "success", code: 200, message: "Successfully added song"};
     });
-    return { status: "success", code: 200, message: "Successfully added song" };
-  });
